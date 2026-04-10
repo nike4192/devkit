@@ -43,11 +43,11 @@ function validateWithEnvSchema(envFile, schemaFile) {
     });
     console.log(chalk.green('  .env.schema validation passed'));
   } catch (e) {
-    const output = (e.stdout || e.stderr || e.message).trimEnd();
+    const raw = (e.stdout || e.stderr || e.message).trimEnd();
+    // Strip ANSI escape sequences to prevent color bleeding
+    const output = raw.replace(/\x1b\[[0-9;]*m/g, '');
     console.log(chalk.yellow('  .env.schema validation warnings:'));
     console.log(output);
-    // Reset terminal colors in case envschema left unclosed ANSI sequences
-    process.stderr.write('\x1b[0m');
   }
 }
 
