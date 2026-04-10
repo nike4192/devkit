@@ -1,0 +1,27 @@
+{
+  "name": "project-devkit",
+  "version": "2.0.0",
+  "description": "Plugin-based CLI toolkit for project infrastructure management",
+  "type": "module",
+  "bin": {
+    "devkit": "./cli.mjs"
+  },
+  "files": [
+    "cli.mjs",
+    "core/",
+    "plugins/",
+    "README.md"
+  ],
+  "dependencies": {
+    "@infisical/sdk": "^2.0.0",
+    "@inquirer/prompts": "^7.0.0",
+    "chalk": "^5.0.0",
+    "commander": "^13.0.0",
+    "yaml": "^2.8.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nike4192/devkit.git"
+  },
+  "license": "MIT"
+}

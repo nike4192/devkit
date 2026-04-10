@@ -1,0 +1,40 @@
+name: env
+description: Manage .env files from examples + Infisical secrets
+
+# Infisical configuration — override in .devkit.d/env.yml
+infisical:
+  project_id: ~
+  site_url: ~
+  client_id_env: INFISICAL_UNIVERSAL_AUTH_CLIENT_ID
+  client_secret_env: INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET
+
+# Subprojects — override in .devkit.d/env.yml
+# Example:
+#   subprojects:
+#     myproject:
+#       path: .
+#       variants: [inner, outer]
+#       config_dir: config
+#       infisical_path: "/{project}/{variant}"
+subprojects: {}
+
+# Servers for deploy command — override in .devkit.d/env.yml
+# Example:
+#   servers:
+#     test:
+#       ssh: user@host
+#       projects_path: /opt/projects
+#       confirm: false
+#     stage:
+#       ssh: user@host
+#       projects_path: /opt/projects
+#       confirm: true
+servers: {}
+
+# Containers for deploy — override in .devkit.d/env.yml
+# Example:
+#   containers:
+#     myproject:
+#       inner: container-inner
+#       outer: container-outer
+containers: {}

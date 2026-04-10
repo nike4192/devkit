@@ -1,0 +1,5 @@
+name: docker
+description: Docker environment management — networks, compose helpers
+
+# Docker compose file — override in .devkit.d/docker.yml
+compose_file: docker-compose.dev.yml

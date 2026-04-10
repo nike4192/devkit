@@ -1,0 +1,31 @@
+name: backups
+description: Database backup management — list, download, dump, restore
+
+# YaDisk configuration — override in .devkit.d/backups.yml
+yadisk:
+  token_env: YADISK_TOKEN
+  # folders:
+  #   test: /path/to/backups/test
+  #   stage: /path/to/backups/stage
+
+# Dump file naming
+dump:
+  pattern: "dump-{env}-{type}-{date}_{time}.sql.gz"
+  local_pattern: "dump-{origin}-{type}-{date}_{time}.sql.gz"
+  info_script: /opt/get_dump_info.sh
+
+# Docker compose file for local operations
+compose_file: docker-compose.dev.yml
+
+# Server definitions — override in .devkit.d/backups.yml
+# Example:
+#   servers:
+#     test:
+#       ssh: user@host
+#       projects_path: /opt/projects
+#       confirm: false
+#     stage:
+#       ssh: user@host
+#       projects_path: /opt/projects
+#       confirm: true
+servers: {}
