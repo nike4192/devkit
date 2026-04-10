@@ -47,7 +47,7 @@ function validateWithEnvSchema(envFile, schemaFile) {
     console.log(chalk.yellow('  .env.schema validation warnings:'));
     console.log(output);
     // Reset terminal colors in case envschema left unclosed ANSI sequences
-    process.stdout.write('\x1b[0m');
+    process.stderr.write('\x1b[0m');
   }
 }
 
