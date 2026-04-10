@@ -38,7 +38,7 @@ function validateWithEnvSchema(envFile, schemaFile) {
   }
 
   try {
-    execSync(`envschema validate --schema "${schemaFile}" --env "${envFile}"`, {
+    execSync(`envschema validate "${schemaFile}" --env "${envFile}"`, {
       stdio: 'pipe', encoding: 'utf-8',
     });
     console.log(chalk.green('  .env.schema validation passed'));
