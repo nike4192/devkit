@@ -2,6 +2,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { parse as parseYaml } from 'yaml';
 import chalk from 'chalk';
+import { registerRpcPlugin } from './rpc-plugin.mjs';
 
 /**
  * Find the project root by walking up from cwd looking for a .devkit file.
@@ -32,13 +33,28 @@ export function findProject(startDir = process.cwd()) {
 
 /**
  * Parse .devkit manifest — plain text, one plugin per line, # for comments.
+ *
+ * Each line is one of:
+ *   <name>                 — builtin plugin from devkitRoot/plugins/<name>/
+ *   <name>=<path>          — external RPC plugin (path with plugin.json),
+ *                            relative path is resolved against project root.
+ *
+ * Returns an array of { name, path? } entries.
  */
 function parseManifest(filePath) {
   const content = readFileSync(filePath, 'utf-8');
   return content
     .split('\n')
     .map(line => line.trim())
-    .filter(line => line && !line.startsWith('#'));
+    .filter(line => line && !line.startsWith('#'))
+    .map(line => {
+      const eq = line.indexOf('=');
+      if (eq === -1) return { name: line };
+      return {
+        name: line.slice(0, eq).trim(),
+        path: line.slice(eq + 1).trim(),
+      };
+    });
 }
 
 /**
@@ -96,26 +112,44 @@ export async function loadPlugins(program, utils, devkitRoot) {
 
   const pluginsDir = resolve(devkitRoot, 'plugins');
 
-  for (const pluginName of plugins) {
-    const pluginDir = resolve(pluginsDir, pluginName);
-    const entryPoint = resolve(pluginDir, 'index.mjs');
+  for (const entry of plugins) {
+    const { name, path: extPath } = entry;
 
-    if (!existsSync(entryPoint)) {
-      console.warn(chalk.yellow(`  Warning: plugin '${pluginName}' not found at ${pluginDir}/`));
+    // External RPC plugin: <name>=<path>
+    if (extPath) {
+      const pluginDir = resolve(projectRoot, extPath);
+      if (!existsSync(resolve(pluginDir, 'plugin.json'))) {
+        console.warn(chalk.yellow(`  Warning: external plugin '${name}' has no plugin.json at ${pluginDir}/`));
+        continue;
+      }
+      try {
+        registerRpcPlugin(program, name, pluginDir);
+      } catch (e) {
+        console.error(chalk.red(`  Error loading external plugin '${name}': ${e.message}`));
+      }
       continue;
     }
 
-    const config = loadPluginConfig(pluginDir, projectRoot, pluginName);
+    // Builtin plugin: load from devkitRoot/plugins/<name>/index.mjs
+    const pluginDir = resolve(pluginsDir, name);
+    const entryPoint = resolve(pluginDir, 'index.mjs');
+
+    if (!existsSync(entryPoint)) {
+      console.warn(chalk.yellow(`  Warning: plugin '${name}' not found at ${pluginDir}/`));
+      continue;
+    }
+
+    const config = loadPluginConfig(pluginDir, projectRoot, name);
 
     try {
       const plugin = await import(entryPoint);
       if (typeof plugin.register !== 'function') {
-        console.warn(chalk.yellow(`  Warning: plugin '${pluginName}' has no register() function`));
+        console.warn(chalk.yellow(`  Warning: plugin '${name}' has no register() function`));
         continue;
       }
       plugin.register(program, { config, utils, projectRoot, devkitRoot });
     } catch (e) {
-      console.error(chalk.red(`  Error loading plugin '${pluginName}': ${e.message}`));
+      console.error(chalk.red(`  Error loading plugin '${name}': ${e.message}`));
     }
   }
 

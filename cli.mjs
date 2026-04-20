@@ -36,10 +36,15 @@ program
     try {
       const { plugins } = findProject();
       console.log(chalk.bold('\nEnabled in this project:\n'));
-      for (const name of plugins) {
-        const isAvailable = available.some(a => a.name === name);
-        const status = isAvailable ? chalk.green('\u2713') : chalk.red('\u2717 not found');
-        console.log(`  ${status} ${name}`);
+      for (const entry of plugins) {
+        const { name, path: extPath } = entry;
+        if (extPath) {
+          console.log(`  ${chalk.cyan('\u279c')} ${name} ${chalk.dim(`(external: ${extPath})`)}`);
+        } else {
+          const isAvailable = available.some(a => a.name === name);
+          const status = isAvailable ? chalk.green('\u2713') : chalk.red('\u2717 not found');
+          console.log(`  ${status} ${name}`);
+        }
       }
     } catch {
       console.log(chalk.dim('\n  No .devkit manifest found in current directory tree.'));
@@ -82,9 +87,10 @@ program
   .action(async (opts) => {
     try {
       const { projectRoot, plugins } = findProject();
+      const enabledNames = plugins.map(p => p.name);
 
       // 1. env init (if env plugin is enabled)
-      if (plugins.includes('env')) {
+      if (enabledNames.includes('env')) {
         console.log(chalk.bold('\n=== Initializing .env files ==='));
         const pluginDir = resolve(devkitRoot, 'plugins', 'env');
         const configPath = resolve(pluginDir, 'config.yml');
@@ -107,7 +113,7 @@ program
       }
 
       // 2. Docker networks (if docker plugin is enabled)
-      if (plugins.includes('docker')) {
+      if (enabledNames.includes('docker')) {
         console.log(chalk.bold('\n=== Docker networks ==='));
         const pluginDir = resolve(devkitRoot, 'plugins', 'docker');
         const configPath = resolve(pluginDir, 'config.yml');
