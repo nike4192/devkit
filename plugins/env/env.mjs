@@ -199,7 +199,16 @@ export async function pullSecrets({ config, utils, projectRoot, envName = 'dev' 
   const subprojects = config.subprojects || {};
 
   if (!hasInfisical(config)) {
-    console.log(chalk.yellow('Infisical not configured. Add credentials to .devkit.d/env.yml'));
+    const creds = getInfisicalCredentials(config);
+    const missing = [];
+    if (!creds.siteUrl) missing.push('infisical.site_url (.devkit.d/env.yml)');
+    if (!creds.projectId) missing.push('infisical.project_id (.devkit.d/env.yml)');
+    if (!creds.clientId) missing.push(`${config.infisical?.client_id_env || 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'} env var`);
+    if (!creds.clientSecret) missing.push(`${config.infisical?.client_secret_env || 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'} env var`);
+    console.log(chalk.yellow('Infisical not configured. Missing:'));
+    for (const m of missing) console.log(chalk.dim(`  - ${m}`));
+    console.log(chalk.dim('\nMachine Identity creds → Infisical UI → Access Control → Identities → Universal Auth.'));
+    console.log(chalk.dim('Add INFISICAL_UNIVERSAL_AUTH_CLIENT_ID/SECRET to project .env.'));
     return;
   }
 

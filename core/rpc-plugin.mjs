@@ -24,7 +24,7 @@
 
 import { spawn } from 'child_process';
 import { createInterface } from 'readline';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import chalk from 'chalk';
 
@@ -153,12 +153,29 @@ export function loadExternalPlugin(pluginDir) {
 /**
  * Register a single external RPC plugin as Commander commands.
  *
+ * If `config` is non-null, it is serialized to JSON and stored at
+ * `<projectRoot>/.devkit.d/.cache/<name>-config.json`. The path is
+ * auto-injected into every RPC call's params under the `config` key
+ * (unless the user passes `--config` explicitly), so external plugins
+ * can read it via the standard `params.config` field.
+ *
  * @param {import('commander').Command} program
  * @param {string} name        — plugin name (CLI subcommand name)
  * @param {string} pluginDir   — absolute path to plugin directory
+ * @param {object} [opts]
+ * @param {object} [opts.config]      — config object from .devkit.d/<name>.yml
+ * @param {string} [opts.projectRoot] — project root (for cache directory)
  */
-export function registerRpcPlugin(program, name, pluginDir) {
+export function registerRpcPlugin(program, name, pluginDir, { config = null, projectRoot = null } = {}) {
   const { manifest, plugin } = loadExternalPlugin(pluginDir);
+
+  let configPath = null;
+  if (config && projectRoot) {
+    const cacheDir = resolve(projectRoot, '.devkit.d', '.cache');
+    if (!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
+    configPath = resolve(cacheDir, `${name}-config.json`);
+    writeFileSync(configPath, JSON.stringify(config, null, 2));
+  }
 
   const parentCmd = program
     .command(name)
@@ -188,6 +205,10 @@ export function registerRpcPlugin(program, name, pluginDir) {
           // Commander stores camelCase from --kebab-case → convert to snake_case
           const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
           params[snakeKey] = val;
+        }
+
+        if (configPath && !('config' in params)) {
+          params.config = configPath;
         }
 
         const result = await plugin.call(tool.name, params);

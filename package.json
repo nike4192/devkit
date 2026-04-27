@@ -1,6 +1,6 @@
 {
   "name": "project-devkit",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Plugin-based CLI toolkit for project infrastructure management",
   "type": "module",
   "bin": {

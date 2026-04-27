@@ -13,12 +13,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const devkitRoot = __dirname;
 
+const pkg = JSON.parse(readFileSync(resolve(devkitRoot, 'package.json'), 'utf-8'));
+
 const program = new Command();
 
 program
   .name('devkit')
   .description('Plugin-based CLI toolkit for project infrastructure management')
-  .version('2.0.0');
+  .version(pkg.version);
 
 // --- Core commands (always available) ---
 
@@ -163,6 +165,15 @@ program
       process.exit(1);
     }
   });
+
+// --- Load project .env so plugins can read INFISICAL_*, YADISK_TOKEN, etc. ---
+
+try {
+  const { projectRoot } = await import('./core/loader.mjs').then(m => m.findProject());
+  utils.loadEnv(resolve(projectRoot, '.env'));
+} catch {
+  // No .devkit manifest yet — core commands (init, plugins) still work
+}
 
 // --- Load plugins dynamically ---
 

@@ -123,7 +123,11 @@ export async function loadPlugins(program, utils, devkitRoot) {
         continue;
       }
       try {
-        registerRpcPlugin(program, name, pluginDir);
+        const overridePath = resolve(projectRoot, '.devkit.d', `${name}.yml`);
+        const config = existsSync(overridePath)
+          ? (parseYaml(readFileSync(overridePath, 'utf-8')) || {})
+          : null;
+        registerRpcPlugin(program, name, pluginDir, { config, projectRoot });
       } catch (e) {
         console.error(chalk.red(`  Error loading external plugin '${name}': ${e.message}`));
       }
