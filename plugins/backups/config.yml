@@ -4,9 +4,30 @@ description: Database backup management — list, download, dump, restore
 # YaDisk configuration — override in .devkit.d/backups.yml
 yadisk:
   token_env: YADISK_TOKEN
+  client_id_env: YADISK_CLIENT_ID
   # folders:
   #   test: /path/to/backups/test
   #   stage: /path/to/backups/stage
+
+# Required env vars for this plugin.
+env_vars:
+  YADISK_TOKEN:
+    description: Yandex.Disk OAuth token (для скачивания/загрузки дампов)
+    required: true
+    secret: true
+    provider: oauth
+    oauth:
+      authorize_url: https://oauth.yandex.ru/authorize
+      response_type: token
+      client_id_var: YADISK_CLIENT_ID
+      # Manual flow by default — Yandex shows the token on its own page after
+      # «Разрешить», user copies it. To enable auto flow, register a fixed
+      # localhost redirect in the OAuth app and set:
+      #   redirect_uri: http://localhost:53682/callback
+      verification_url: https://oauth.yandex.ru/verification_code
+    hint: |
+      Нажми «Разрешить», затем скопируй access_token со страницы verification_code
+      и вставь сюда.
 
 # Dump file naming
 dump:

@@ -8,6 +8,26 @@ infisical:
   client_id_env: INFISICAL_UNIVERSAL_AUTH_CLIENT_ID
   client_secret_env: INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET
 
+# Required env vars — collected interactively by `devkit setup`.
+# Override in .devkit.d/env.yml to add project-specific vars.
+env_vars:
+  INFISICAL_UNIVERSAL_AUTH_CLIENT_ID:
+    description: Infisical Machine Identity Client ID
+    required: true
+    provider: prompt-with-page
+    open_url: "{infisical.site_url}/projects/secret-management/{infisical.project_id}/access-management?selectedTab=identities"
+    hint: |
+      Создай Universal Auth Identity (роль Viewer достаточно для read-only)
+      и скопируй Client ID из карточки identity.
+  INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET:
+    description: Infisical Machine Identity Client Secret
+    required: true
+    secret: true
+    provider: prompt
+    hint: |
+      В той же identity → Authentication → Universal Auth → Create Client Secret.
+      Секрет показывается ОДИН раз — скопируй сразу.
+
 # Subprojects — override in .devkit.d/env.yml
 # Example:
 #   subprojects:

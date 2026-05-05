@@ -86,12 +86,22 @@ program
   .description('Full project setup: env files, Docker networks, required directories')
   .option('--env-name <env>', 'Infisical environment', 'dev')
   .option('--force', 'Overwrite existing .env files')
+  .option('--non-interactive', 'Fail on missing env vars instead of prompting')
   .action(async (opts) => {
     try {
       const { projectRoot, plugins } = findProject();
       const enabledNames = plugins.map(p => p.name);
 
-      // 1. env init (if env plugin is enabled)
+      // 1. Collect required env vars (Infisical creds, YaDisk token, etc.)
+      console.log(chalk.bold('\n=== Required env vars ==='));
+      const { collectEnvVars } = await import('./core/setup-env-vars.mjs');
+      await collectEnvVars({
+        devkitRoot, projectRoot, plugins, utils,
+        force: opts.force,
+        nonInteractive: opts.nonInteractive,
+      });
+
+      // 2. env init (if env plugin is enabled)
       if (enabledNames.includes('env')) {
         console.log(chalk.bold('\n=== Initializing .env files ==='));
         const pluginDir = resolve(devkitRoot, 'plugins', 'env');
@@ -114,7 +124,7 @@ program
         });
       }
 
-      // 2. Docker networks (if docker plugin is enabled)
+      // 3. Docker networks (if docker plugin is enabled)
       if (enabledNames.includes('docker')) {
         console.log(chalk.bold('\n=== Docker networks ==='));
         const pluginDir = resolve(devkitRoot, 'plugins', 'docker');
@@ -146,7 +156,7 @@ program
         }
       }
 
-      // 3. Upload directories
+      // 4. Upload directories
       console.log(chalk.bold('\n=== Directories ==='));
       const dirs = ['apps/inner/uploads', 'apps/outer/uploads'];
       for (const dir of dirs) {
